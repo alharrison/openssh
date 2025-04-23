@@ -95,13 +95,13 @@
 	"ecdh-nistp384-hqc-192r3-sha384@openquantumsafe.org," \
 	"hqc-256-sha512," \
 	"ecdh-nistp521-hqc-256r3-sha512@openquantumsafe.org," \
-	"ml-kem-512-sha256," \
+	"mlkem512-sha256," \
 	"ecdh-nistp256-ml-kem-512-sha256@openquantumsafe.org," \
 	"x25519-ml-kem-512-sha256@openquantumsafe.org," \
-	"ml-kem-768-sha256," \
+	"mlkem768-sha256," \
 	"mlkem768nistp256-sha256," \
 	"mlkem768x25519-sha256," \
-	"ml-kem-1024-sha384," \
+	"mlkem1024-sha384," \
 	"mlkem1024nistp384-sha384," \
 	"sntrup761-sha512," \
 	"sntrup761x25519-sha512@openssh.com"
