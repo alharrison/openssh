@@ -308,7 +308,7 @@ kexs:
     name: 'ml_kem_512'
     enable: true
     hash: 'sha256'
-    pretty_name: 'ml-kem-512-sha256'
+    pretty_name: 'mlkem512-sha256'
     mix_with:
       -
         name: 'nistp256'
@@ -323,7 +323,7 @@ kexs:
     name: 'ml_kem_768'
     enable: true
     hash: 'sha256'
-    pretty_name: 'ml-kem-768-sha256'
+    pretty_name: 'mlkem768-sha256'
     mix_with:
       -
         name: 'nistp256'
@@ -338,7 +338,7 @@ kexs:
     name: 'ml_kem_1024'
     enable: true
     hash: 'sha384'
-    pretty_name: 'ml-kem-1024-sha384'
+    pretty_name: 'mlkem1024-sha384'
     mix_with:
       -
         name: 'nistp384'
