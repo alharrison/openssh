@@ -1,4 +1,4 @@
-/* $OpenBSD: ssh-keyscan.c,v 1.165 2024/12/06 15:17:15 djm Exp $ */
+/* $OpenBSD: ssh-keyscan.c,v 1.167 2025/08/29 03:50:38 djm Exp $ */
 /*
  * Copyright 1995, 1996 by David Mazieres <dm@lcs.mit.edu>.
  *
@@ -12,9 +12,7 @@
 #include <sys/types.h>
 #include "openbsd-compat/sys-queue.h"
 #include <sys/resource.h>
-#ifdef HAVE_SYS_TIME_H
-# include <sys/time.h>
-#endif
+#include <sys/time.h>
 
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -23,15 +21,13 @@
 #include <openssl/bn.h>
 #endif
 
+#include <errno.h>
 #include <limits.h>
 #include <netdb.h>
-#include <errno.h>
-#ifdef HAVE_POLL_H
-#include <poll.h>
-#endif
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <poll.h>
 #include <signal.h>
 #include <string.h>
 #include <unistd.h>
@@ -63,13 +59,11 @@ int IPv4or6 = AF_UNSPEC;
 
 int ssh_port = SSH_DEFAULT_PORT;
 
-#define KT_DSA		(1)
-#define KT_RSA		(1<<1)
-#define KT_ECDSA	(1<<2)
-#define KT_ED25519	(1<<3)
-#define KT_XMSS		(1<<4)
-#define KT_ECDSA_SK	(1<<5)
-#define KT_ED25519_SK	(1<<6)
+#define KT_RSA		(1)
+#define KT_ECDSA	(1<<1)
+#define KT_ED25519	(1<<2)
+#define KT_ECDSA_SK	(1<<4)
+#define KT_ED25519_SK	(1<<5)
 ///// OQS_TEMPLATE_FRAGMENT_ASSIGN_KT_MASKS_START
 #define KT_FALCON_512 ((uint64_t)1<<7)
 #define KT_RSA3072_FALCON_512 ((uint64_t)1<<8)
@@ -97,7 +91,7 @@ int ssh_port = SSH_DEFAULT_PORT;
 #define KT_ECDSA_NISTP521_MAYO_5 ((uint64_t)1<<30)
 #define KT_MAX ((uint64_t)1<<30)
 ///// OQS_TEMPLATE_FRAGMENT_ASSIGN_KT_MASKS_END
-#define KT_MIN		KT_DSA
+#define KT_MIN		KT_RSA
 
 int get_cert = 0;
 uint64_t get_keytypes = KT_RSA|KT_ECDSA|KT_ED25519|KT_ECDSA_SK|KT_ED25519_SK|\
@@ -292,10 +286,6 @@ keygrab_ssh2(con *c)
 	int r;
 
 	switch (c->c_keytype) {
-	case KT_DSA:
-		myproposal[PROPOSAL_SERVER_HOST_KEY_ALGS] = get_cert ?
-		    "ssh-dss-cert-v01@openssh.com" : "ssh-dss";
-		break;
 	case KT_RSA:
 		myproposal[PROPOSAL_SERVER_HOST_KEY_ALGS] = get_cert ?
 		    "rsa-sha2-512-cert-v01@openssh.com,"
@@ -308,10 +298,6 @@ keygrab_ssh2(con *c)
 	case KT_ED25519:
 		myproposal[PROPOSAL_SERVER_HOST_KEY_ALGS] = get_cert ?
 		    "ssh-ed25519-cert-v01@openssh.com" : "ssh-ed25519";
-		break;
-	case KT_XMSS:
-		myproposal[PROPOSAL_SERVER_HOST_KEY_ALGS] = get_cert ?
-		    "ssh-xmss-cert-v01@openssh.com" : "ssh-xmss@openssh.com";
 		break;
 	case KT_ECDSA:
 		myproposal[PROPOSAL_SERVER_HOST_KEY_ALGS] = get_cert ?
@@ -937,11 +923,6 @@ main(int argc, char **argv)
 				int type = sshkey_type_from_shortname(tname);
 
 				switch (type) {
-#ifdef WITH_DSA
-				case KEY_DSA:
-					get_keytypes |= KT_DSA;
-					break;
-#endif
 				case KEY_ECDSA:
 					get_keytypes |= KT_ECDSA;
 					break;
@@ -950,9 +931,6 @@ main(int argc, char **argv)
 					break;
 				case KEY_ED25519:
 					get_keytypes |= KT_ED25519;
-					break;
-				case KEY_XMSS:
-					get_keytypes |= KT_XMSS;
 					break;
 				case KEY_ED25519_SK:
 					get_keytypes |= KT_ED25519_SK;

@@ -1,4 +1,4 @@
-/* $OpenBSD: log.c,v 1.64 2024/12/07 10:05:36 djm Exp $ */
+/* $OpenBSD: log.c,v 1.65 2025/09/02 09:34:48 djm Exp $ */
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
@@ -394,8 +394,9 @@ do_log(LogLevel level, int force, const char *suffix, const char *fmt,
 		vsnprintf(msgbuf, sizeof(msgbuf), fmt, args);
 	}
 	if (suffix != NULL) {
-		snprintf(fmtbuf, sizeof(fmtbuf), "%s: %s", msgbuf, suffix);
-		strlcpy(msgbuf, fmtbuf, sizeof(msgbuf));
+		int n = snprintf(fmtbuf, sizeof(fmtbuf), "%s: %s", msgbuf, suffix);
+		if (n >= 0 && (size_t)n < sizeof(fmtbuf))
+			strlcpy(msgbuf, fmtbuf, sizeof(msgbuf));
 	}
 	strnvis(fmtbuf, msgbuf, sizeof(fmtbuf),
 	    log_on_stderr ? LOG_STDERR_VIS : LOG_SYSLOG_VIS);
@@ -406,11 +407,12 @@ do_log(LogLevel level, int force, const char *suffix, const char *fmt,
 		tmp_handler(level, force, fmtbuf, log_handler_ctx);
 		log_handler = tmp_handler;
 	} else if (log_on_stderr) {
-		snprintf(msgbuf, sizeof msgbuf, "%s%s%.*s\r\n",
+		snprintf(msgbuf, sizeof msgbuf, "%s%s%.*s",
 		    (log_on_stderr > 1) ? progname : "",
 		    (log_on_stderr > 1) ? ": " : "",
 		    (int)sizeof msgbuf - 3, fmtbuf);
 		(void)write(log_stderr_fd, msgbuf, strlen(msgbuf));
+		(void)write(log_stderr_fd, "\r\n", 2);
 	} else {
 #if defined(HAVE_OPENLOG_R) && defined(SYSLOG_DATA_INIT)
 		openlog_r(progname, LOG_PID, log_facility, &sdata);
@@ -502,7 +504,7 @@ sshlogdirect(LogLevel level, int forced, const char *fmt, ...)
  * To prevent flipping in and out of rate-limiting, there is a hysteresis
  * timer that delays leaving the rate-limited state.
  *
- * While in the rate-limited state, events can be periodically allowed though
+ * While in the rate-limited state, events can be periodically allowed through
  * and the number of dropped events since the last log obtained.
  *
  * XXX a moving average rate of events might be a better approach here rather
